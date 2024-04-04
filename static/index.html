@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1" />
+  <meta charset="UTF-8">
+
+  <style>
+    html, body, #map {
+        width: 100%; height: 100%; padding: 0; margin: 0;
+    }
+  </style>
+  <title id="page_title">Github graph </title>
+</head>
+<body>
+
+  <button onclick="simulation.is_stopped = false;">Start</button>
+  <button onclick="simulation.is_stopped = true; ">Stop</button>
+  <!-- <input > </input> -->
+
+  <!-- <div class="main_block" style="width: auto;">
+    <canvas onclick="onClickCanvas(event)" onmousemove="onMoveCanvas(event)"
+    id="graph_view" width="500" height="500" style="border: 1px solid black"></canvas>
+  </div> -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.js" integrity="sha512-iiZOijMkLFQSa43AyuzD6p176GJlnhWXEv7loEZFkCDpFQvZCijZLE6U8IRpAIb53KagIIwhSwHWTgsDlci/jw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+
+  <script>
+// Create some sample data
+var nodes = [
+  // { id: "A", },
+  // { id: "B", },
+  // { id: "C", }
+];
+
+var links = [
+  // { source: "A", target: "B", weight:400. },
+  // { source: "B", target: "C", weight: 400. },
+  // { source: "C", target: "A", weight: 400. }
+];
+
+// Set up the SVG element
+var svg = d3.select("body").append("svg")
+  .attr("width", window.outerWidth * 0.8)
+  .attr("height", window.outerHeight * 0.8);
+
+let centerX = window.outerWidth / 4;
+let centerY = window.outerHeight / 4;
+
+// Create the simulation
+var simulation = d3.forceSimulation(nodes)
+  .force("link", d3.forceLink(links).id(d => d.id).distance(100)/*.strength(strength)*/) // Increase link distance
+  .force("charge", d3.forceManyBody().strength(d=> -3. * d.weight))//-0.01 /* |d => d.weight || -400*/)) // Increase node repulsion
+  .force("center", d3.forceCenter(centerX, centerY));
+
+// Add the links
+var link = svg.append("g")
+  .selectAll("line")
+  .data(links)
+  .enter()
+  .append("line")
+  .attr("stroke", "#999");
+
+// Define the group for the nodes
+var node_not_grouped = svg.append("g")
+  .selectAll("g")
+  .data(nodes)
+
+var node = node_not_grouped
+  .enter()
+  .append("g") // group element to contain rect and text
+  // .call(d3.drag() // add drag capabilities
+  //   .on("start", dragstarted)
+  //   .on("drag", dragged)
+  //   .on("end", dragended));
+
+// Add the rectangles for the nodes
+
+node.append("rect")
+  .attr("width", 150)
+  .attr("height", 20)
+  .attr("fill", "#fff") // set the fill color to gray for the background
+  .attr("stroke", "black") // set the stroke to black for the border
+  .attr("stroke-width", 1) // set the border width
+  .attr("x", -75) // center the rectangle around the node's position
+  .attr("y", -10);
+
+// Add the text for the nodes
+node.append("text")
+  .text(d => d.id)
+  .attr("dx", -10) // adjust these to center the text within the rect
+  .attr("dy", 5);
+
+// Update positions on each tick
+simulation.on("tick", function() {
+  // update link positions
+  link
+    .attr("x1", d => d.source.x)
+    .attr("y1", d => d.source.y)
+    .attr("x2", d => d.target.x)
+    .attr("y2", d => d.target.y);
+
+  // update node positions
+  node.attr("transform", d => `translate(${d.x},${d.y})`);//!d.fixed? `translate(${d.fixed ? d.x : d.x += d.vx},${d.fixed ? d.y : d.y += d.vy})`: undefined );
+});
+
+
+
+
+var zoomHandler = d3.zoom()
+  .on("zoom", zoomActions);
+
+// Apply the zoom handler to the SVG element
+svg.call(zoomHandler);
+
+// Define the zoomActions function to handle zoom events
+function zoomActions(event) {
+  // Get the transform information from the event
+  var transform = event.transform;
+
+  // Apply the transform to the SVG group containing the links and nodes
+  svg.selectAll("g").attr("transform", transform);
+}
+
+
+function randomIndex(){
+  if (nodes.length < 5) {
+    return Math.floor(Math.random() * nodes.length );
+  }
+  return Math.floor(Math.random() * 5 ) + nodes.length - 5;
+}
+
+let new_nodes = new Set();
+function addNodeAndLink(name, targetIndicies) {
+  // nodes.forEach(n => {
+  //   n.fx = n.x;
+  //   n.fy = n.y;
+  // });
+
+  const targetNodeX = (targetIndicies.length? nodes[targetIndicies[0]].dx + 50 : centerX);
+  const targetNodeY = (targetIndicies.length? nodes[targetIndicies[0]].dy + 50 : centerY);
+
+  // Create a new node with a unique id
+  const newNode = { id: name, x: targetNodeX, y: targetNodeY, weight: 400. };
+  nodes.push(newNode);
+
+  for (let targetIndex of targetIndicies) {
+    const targetNode = nodes[targetIndex];
+    const newLink = { source: newNode.id, target: targetNode.id };
+    links.push(newLink);
+  }
+  new_nodes.add(newNode);
+
+
+  // var newNodeVisual = svg.append('g') // Assuming svg is your SVG container
+  //   .datum(newNode)
+  //   .call(d3.drag()
+  //     .on("start", dragstarted)
+  //     .on("drag", dragged)
+  //     .on("end", dragended));
+
+  // newNodeVisual.append("rect")
+  //   .attr("width", 150)
+  //   .attr("height", 20)
+  //   .attr("fill", newNode.color ?? "#bfbff2")
+  //   .attr("stroke", "black")
+  //   .attr("stroke-width", 1)
+  //   .attr("x", -75)
+  //   .attr("y", -10);
+
+  // newNodeVisual.append("text")
+  //   .text(newNode.id)
+  //   .attr("text-anchor", "middle")
+  //   .attr("dx", 0)
+  //   .attr("dy", 5)
+  //   .attr("x", 0)
+  //   .attr("y", 0);
+
+
+  // node_not_grouped.data(nodes);
+  // simulation.nodes(nodes);
+
+  // var newNodeVisual = svg.append('g') // Assuming svg is your SVG container
+  //   .datum(newNode)
+  //   .call(d3.drag()
+  //     .on("start", dragstarted)
+  //     .on("drag", dragged)
+  //     .on("end", dragended));
+
+  // newNodeVisual.append("rect")
+  //   .attr("width", 150)
+  //   .attr("height", 20)
+  //   .attr("fill", newNode.color ?? "#bfbff2")
+  //   .attr("stroke", "black")
+  //   .attr("stroke-width", 1)
+  //   .attr("x", -75)
+  //   .attr("y", -10);
+
+  // newNodeVisual.append("text")
+  //   .text(newNode.id)
+  //   .attr("text-anchor", "middle")
+  //   .attr("dx", 0)
+  //   .attr("dy", 5)
+  //   .attr("x", 0)
+
+
+
+
+
+
+
+  // Restart the simulation with the updated nodes and links
+  // restartSimulation();
+
+  // simulation.alpha(1.).tick(100);
+
+  // nodes.forEach(n => {
+  //   n.fx = undefined;
+  //   n.fy = undefined;
+  // });
+
+  // // Restart the simulation again for normal operation
+  // simulation.alpha(0.3).restart();
+
+  return nodes.length - 1;
+}
+
+function addLink(idx1, idx2) {
+  // console.warn(nodes[idx1]);
+  // console.warn(nodes[idx2]);
+  const newLink = { source: nodes[idx1].id, target: nodes[idx2].id };
+  // console.warn(newLink);
+  links.push(newLink);
+  // restartSimulation();
+}
+
+// Function to restart the simulation
+function restartSimulation() {
+  // node = node.data(nodes, d => d.id);
+
+  // simulation.nodes(nodes);
+  // simulation.force("link").links(links);
+  // // simulation.restart();
+  // return;
+  // Apply the general update pattern for the nodes
+  node = node.data(nodes, d => d.id);
+
+  node.exit().remove();
+
+  var newNode = node.enter().append('g')
+    .call(d3.drag()
+      .on("start", dragstarted)
+      .on("drag", dragged)
+      .on("end", dragended));
+
+  newNode.append("rect")
+    .attr("width", 150)
+    .attr("height", 20)
+    .attr("fill", d => {
+      console.log(d);
+      return d.color ?? "#bfbff2"
+    })
+    .attr("stroke", "black")
+    .attr("stroke-width", 1)
+    .attr("x", -75)
+    .attr("y", -10);
+
+  newNode.append("text")
+    .text(d => d.id)
+    .attr("text-anchor", "middle")
+    .attr("dx", 0)
+    .attr("dy", 5)
+    .attr("x", 0)
+    .attr("y", 0);
+
+  node = newNode.merge(node);
+
+  // Apply the general update pattern for links
+  link = link.data(links);
+
+  link.exit().remove();
+
+  link = link.enter().append("line")
+    .attr("stroke", "#999")
+    .merge(link);
+
+  // Update and restart the simulation
+  simulation.nodes(nodes);
+  simulation.force("link").links(links);
+  simulation.alpha(0.3).restart();
+}
+
+// Start adding nodes and links every 5 seconds
+// setInterval(function() {
+//   if (simulation.is_stopped) {
+//     return;
+//   }
+
+//   let targetIndicies = [];
+//   for (let i = 0; i < 3; i++) {
+//     targetIndicies.push(randomIndex());
+//   }
+//   addNodeAndLink(`Node${nodes.length}`, targetIndicies);
+// }, 1000);
+
+let name_to_node = new Map();
+
+let queue = new Map();
+function add_user(name, parent) {
+  let user = queue.get(name);
+  if (user) {
+    user.priority += 0.5;
+    addLink(name_to_node.get(name), name_to_node.get(parent.name));
+  } else if (name_to_node.get(name) != undefined) {
+    addLink(name_to_node.get(name), name_to_node.get(parent.name));
+  } else {
+    user = {
+      name: name,
+      priority: parent.priority - 1,
+    };
+    name_to_node.set(user.name, addNodeAndLink(user.name, [name_to_node.get(parent.name)]));
+    queue.set(user.name, user);
+  }
+
+}
+function get_user() {
+  let max_priority = -10000;
+  for (let user of queue.values()) {
+    max_priority = Math.max(max_priority, user.priority);
+  }
+  let result = null;
+  for (let user of queue.values()) {
+    if (user.priority == max_priority) {
+      result = user
+      break;
+    }
+  }
+
+  queue.delete(result.name);
+  return result;
+}
+
+// const myUrl = new URL('https://example.com/?user=john');
+// const urlParams = new URLSearchParams(myUrl.search);
+const urlParams = new URLSearchParams(document.location.search);
+const userParam = urlParams.get('user');
+console.log(userParam);
+
+let root_user = {
+  // name: "misha1sh",
+  // name: "SilverFoxxxy",
+  name: userParam??"progmaticlab",
+  priority: 10000,
+};
+name_to_node.set(root_user.name, addNodeAndLink(root_user.name, []));
+
+// root_user.node_id = addNodeAndLink(root_user.name, [])
+queue.set(root_user.name, root_user);
+
+async function func() {
+  if (simulation.is_stopped || nodes.length > 250) {
+    setTimeout(func, 1000);
+    return;
+  }
+
+
+  let user = get_user();
+  let req = await fetch(`/api/user/${user.name}`);
+  let user_info = await req.json();
+  // console.log(user_info);
+
+  simulation.stop();
+  if (user_info['followers_cnt'] < 30) {
+    for (let follower of user_info['followers']) {
+      add_user(follower, user);
+    }
+  }
+  if (user_info['following_cnt'] < 30) {
+    for (let following of user_info['following']) {
+      add_user(following, user);
+    }
+  }
+
+  // simulation.restart();
+
+  restartSimulation();
+
+  nodes.forEach(n => {
+    if (!new_nodes.has(n)) {
+      n.fx = n.x;
+      n.fy = n.y;
+    }
+  });
+  new_nodes.clear();
+
+  simulation.tick(10);
+  nodes.forEach(n => {
+    n.fx = undefined;
+    n.fy = undefined;
+  });
+  let node_index = name_to_node.get(user.name);
+  let selectedNode = node.filter((d, index) => index == node_index);
+  selectedNode.select("rect").attr("fill", "#b366ff");
+
+  // simulation.alpha(1.).tick(100);
+
+  // nodes.forEach(n => {
+  //   n.fx = undefined;
+  //   n.fy = undefined;
+  // });
+
+  setTimeout(func, 500);
+}
+
+func();
+
+
+
+// Drag functions
+function dragstarted(event, d) {
+  if (!event.active) simulation.alphaTarget(0.3).restart();
+  d.fx = d.x;
+  d.fy = d.y;
+}
+
+function dragged(event, d) {
+  d.fx = event.x;
+  d.fy = event.y;
+}
+
+function dragended(event, d) {
+  if (!event.active) simulation.alphaTarget(0);
+  d.fx = null;
+  d.fy = null;
+}
+
+
+  </script>
+
+</body>
+
+</html>

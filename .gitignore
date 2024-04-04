@@ -1,0 +1,5 @@
+.ghtoken
+cache
+__pycache__
+static2/
+gpt.txt
