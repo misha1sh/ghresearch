@@ -61,6 +61,8 @@ def get_user_info(username):
   return user
 
 
+print(session.get("https://api.github.com/rate_limit").json())
+
 # def bfs(username):
 #   checked = set()
 

@@ -1,0 +1,95 @@
+https://en.wikipedia.org/wiki/Social_network_analysis
+https://user.informatik.uni-goettingen.de/~ychen/papers/GitHub_CSCWD21.pdf
+
+1. Erdős–Rényi Model (ER Model):
+   - Degree Distribution: Binomial \( B(n-1, p) \) or approximately Poisson for large \( n \) and small \( p \).
+   - Clustering Coefficient: Typically very low, as edges are randomly distributed.
+   - Path Length and Diameter: Generally logarithmic in the number of nodes, i.e., \( \log(n) \).
+   - Spectral Properties: Eigenvalues of the adjacency matrix are distributed around the average degree.
+   - Global Properties: Emergence of a giant component when \( p \) crosses \( \frac{1}{n} \).
+
+2. Barabási–Albert Model (BA Model):
+   - Degree Distribution: Power-law \( P(k) \sim k^{-\gamma} \), typically \( \gamma \approx 3 \).
+   - Clustering Coefficient: Moderate but non-zero, as new nodes preferentially attach to well-connected nodes.
+   - Path Length and Diameter: Small-world characteristic, but generally slightly larger than ER model.
+   - Spectral Properties: Power-law in the eigenvalue distribution.
+   - Assortativity: Typically disassortative, meaning high-degree nodes connect to low-degree nodes.
+
+3. Watts-Strogatz Model (WS Model):
+   - Degree Distribution: Initial setup is regular, which might become more complex with rewiring.
+   - Clustering Coefficient: High clustering, especially with low rewiring probability.
+   - Path Length and Diameter: Short path lengths, especially as rewiring probability increases.
+   - Spectral Properties: Spectrum can show localized high eigenvalues due to clustering.
+   - Small-world Properties: Balances high clustering with short average path lengths.
+
+4. Configuration Model:
+   - Degree Distribution: Defined by a specific degree sequence.
+   - Clustering Coefficient: Generally low, unless constraints are imposed.
+   - Path Length and Diameter: Depends on the degree sequence; generally maintains short paths.
+   - Spectral Properties: Reflect the given degree sequence; can be highly variable.
+
+5. Stochastic Block Model (SBM):
+   - Degree Distribution: Determined by block structures.
+   - Clustering Coefficient: Can be high within blocks and low between blocks.
+   - Community Structure: Clear communities by design.
+   - Spectral Properties: Eigenvalues can reveal block structure.
+
+
+
+
+import networkx as nx
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Creating a graph using one of the models; here we use the Erdős–Rényi model as an example
+n = 1000  # number of nodes
+p = 0.01  # probability of edge creation
+
+# Generate the graph
+G = nx.erdos_renyi_graph(n, p)
+
+# Calculate Degree Distribution
+degrees = [deg for node, deg in G.degree()]
+degree_distribution = np.bincount(degrees) / n
+
+# Plot Degree Distribution
+plt.figure(figsize=(10, 6))
+plt.bar(range(len(degree_distribution)), degree_distribution, width=1)
+plt.title("Degree Distribution")
+plt.xlabel("Degree")
+plt.ylabel("Fraction of Nodes")
+plt.show()
+
+# Calculate the Clustering Coefficient
+clustering_coefficient = nx.average_clustering(G)
+print(f"Average Clustering Coefficient: {clustering_coefficient}")
+
+# Calculate Average Path Length and Diameter
+if nx.is_connected(G):
+    avg_path_length = nx.average_shortest_path_length(G)
+    diameter = nx.diameter(G)
+    print(f"Average Path Length: {avg_path_length}")
+    print(f"Diameter: {diameter}")
+else:
+    print("Graph is not connected. Consider analyzing its giant component.")
+
+# Calculate Spectral Properties
+laplacian = nx.laplacian_matrix(G).toarray()
+eigenvalues = np.linalg.eigvalsh(laplacian)
+print(f"Laplacian Eigenvalues: {eigenvalues}")
+
+# Calculate Assortativity
+assortativity = nx.degree_assortativity_coefficient(G)
+print(f"Assortativity Coefficient: {assortativity}")
+
+1. Degree Distribution: Calculating and visualizing the degree distribution helps identify the probability distribution of node degrees in your graph.
+
+2. Clustering Coefficient: nx.average_clustering(G) computes the average clustering coefficient, which indicates the tendency of nodes to form clusters or triangles.
+
+3. Average Path Length and Diameter: These metrics require the graph to be connected. Use nx.is_connected(G) to check; if not, consider calculating these values for the largest connected component.
+
+4. Spectral Properties: Here, we calculate the eigenvalues of the Laplacian matrix, which can provide insight into the graph's structure.
+
+5. Assortativity: nx.degree_assortativity_coefficient(G) measures the tendency of nodes to connect to others that are similar (in terms of degree).
+
+These functions give you insights into t
