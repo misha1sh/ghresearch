@@ -1,4 +1,6 @@
 .ghtoken
+.mongodb_admin
+.mongodb_reader
 cache
 __pycache__
 static2/

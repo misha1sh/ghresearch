@@ -1,0 +1,38 @@
+sudo apt-get install gnupg curl
+curl -fsSL https://www.mongodb.org/static/pgp/server-8.0.asc | \
+   sudo gpg -o /usr/share/keyrings/mongodb-server-8.0.gpg \
+   --dearmor
+echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-8.0.gpg ] https://repo.mongodb.org/apt/ubuntu noble/mongodb-org/8.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-8.0.list
+
+sudo apt-get update
+sudo apt-get install -y mongodb-org
+sudo systemctl start mongod
+sudo systemctl enable mongod
+
+sudo apt install mysql-server
+sudo systemctl enable mysql
+
+sudo apt-get install -y python3-pip python3-full  python3-venv python3-numpy python3-scipy python3-flask pkg-config libmysqlclient-dev
+pip3 install --user --break-system-packages flask "pymongo[srv]" networkx jupyterlab jupyter-core ipykernel matplotlib pandas optuna mysqlclient optuna-dashboard
+
+db.createUser({
+  user: "admin",
+  pwd: "",
+  roles: [{ role: "root", db: "admin" }]
+});
+
+
+Change
+
+db.createUser({
+  user: "ghresearch",
+  pwd: "",
+  roles: [{ role: "read", db: "users" }]
+});
+
+to
+db.createUser({
+  user: "ghresearch",
+  pwd: "",
+  roles: [{ role: "read", db: "github_db" }]
+});

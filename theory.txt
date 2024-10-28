@@ -1,6 +1,12 @@
 https://en.wikipedia.org/wiki/Social_network_analysis
 https://user.informatik.uni-goettingen.de/~ychen/papers/GitHub_CSCWD21.pdf
 
+
+Node degree correlations https://en.wikipedia.org/wiki/Barab%C3%A1si%E2%80%93Albert_model
+Clustering coefficient
+
+spectral Properties https://en.wikipedia.org/wiki/Eigenvalues_and_eigenvectors#Graphs
+
 1. Erdős–Rényi Model (ER Model):
    - Degree Distribution: Binomial \( B(n-1, p) \) or approximately Poisson for large \( n \) and small \( p \).
    - Clustering Coefficient: Typically very low, as edges are randomly distributed.
